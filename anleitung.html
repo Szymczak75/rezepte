@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anleitung – Neues Rezept hinzufügen</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #faf7f2; --warm: #f2ebe0; --parchment: #e8dfc8;
+    --brown: #6b4c2a; --dark: #2c1a0e; --accent: #c4783a;
+    --green: #5e7a42; --border: #ddd0b8; --text: #3d2810; --muted: #9e8060;
+    --code-bg: #1e1208; --code-text: #f0d8b0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Nunito', sans-serif; background: var(--cream); color: var(--text); line-height: 1.7; }
+
+  .site-header {
+    background: var(--dark); padding: 0 48px; height: 68px;
+    display: flex; align-items: center; gap: 24px;
+    position: sticky; top: 0; z-index: 200;
+    box-shadow: 0 2px 24px rgba(0,0,0,0.25);
+  }
+  .back-link { color: #c8a878; text-decoration: none; font-size: 0.9rem; font-weight: 700; opacity: 0.7; transition: opacity 0.2s; }
+  .back-link:hover { opacity: 1; }
+  .site-logo { font-family: 'Lora', serif; font-size: 1.3rem; color: #e8dfc8; text-decoration: none; }
+  .site-logo em { color: var(--accent); font-style: italic; }
+
+  .hero {
+    background: linear-gradient(135deg, #1e1208 0%, #3a2010 50%, #5a3318 100%);
+    padding: 56px 48px 48px; color: white;
+  }
+  .hero-badge {
+    display: inline-block; background: var(--accent); color: white;
+    font-size: 0.72rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+    padding: 5px 14px; border-radius: 50px; margin-bottom: 18px;
+  }
+  .hero h1 { font-family: 'Lora', serif; font-size: clamp(1.8rem,4vw,2.8rem); margin-bottom: 12px; color: #f0d8b0; }
+  .hero p { font-size: 1.05rem; color: #c8a878; max-width: 620px; font-weight: 300; }
+
+  .content { max-width: 860px; margin: 0 auto; padding: 48px; }
+
+  /* Steps */
+  .step-block {
+    display: grid; grid-template-columns: 48px 1fr; gap: 0 24px;
+    margin-bottom: 48px; position: relative;
+  }
+  .step-block:not(:last-child)::before {
+    content: ''; position: absolute; left: 23px; top: 52px; bottom: -24px;
+    width: 2px; background: var(--border);
+  }
+  .step-num {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: var(--accent); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 1.1rem; flex-shrink: 0;
+    position: relative; z-index: 1;
+    box-shadow: 0 4px 16px rgba(196,120,58,0.35);
+  }
+  .step-num.green { background: var(--green); box-shadow: 0 4px 16px rgba(94,122,66,0.35); }
+  .step-content { padding-top: 8px; }
+  .step-title { font-family: 'Lora', serif; font-size: 1.25rem; font-weight: 700; color: var(--dark); margin-bottom: 10px; }
+  .step-text { font-size: 0.97rem; color: #5a4030; margin-bottom: 14px; }
+
+  /* Prompt box */
+  .prompt-box {
+    background: var(--code-bg); border-radius: 14px; overflow: hidden;
+    margin: 16px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  }
+  .prompt-header {
+    background: rgba(255,255,255,0.06); padding: 10px 18px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .prompt-label { font-size: 0.72rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); }
+  .copy-btn {
+    background: rgba(196,120,58,0.2); border: 1px solid rgba(196,120,58,0.4);
+    color: var(--accent); padding: 4px 12px; border-radius: 20px;
+    font-family: 'Nunito', sans-serif; font-size: 0.75rem; font-weight: 700;
+    cursor: pointer; transition: all 0.18s;
+  }
+  .copy-btn:hover { background: var(--accent); color: white; }
+  .prompt-body {
+    padding: 20px 22px; font-family: 'Courier New', monospace;
+    font-size: 0.88rem; line-height: 1.75; color: var(--code-text);
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .prompt-body .hl { color: #ffd080; font-weight: bold; }
+  .prompt-body .comment { color: #806040; font-style: italic; }
+
+  /* Info boxes */
+  .info-box {
+    border-radius: 12px; padding: 18px 22px; margin: 16px 0;
+    display: flex; gap: 14px; align-items: flex-start; font-size: 0.93rem;
+  }
+  .info-box.tip { background: #fffbf0; border: 1.5px solid #f0d060; color: #7a6010; }
+  .info-box.note { background: #f0f6ff; border: 1.5px solid #90b8e0; color: #2a4870; }
+  .info-box.warn { background: #fff5f0; border: 1.5px solid #e09060; color: #7a3010; }
+  .info-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
+
+  /* File tree */
+  .file-tree {
+    background: var(--code-bg); border-radius: 12px; padding: 20px 24px;
+    font-family: 'Courier New', monospace; font-size: 0.88rem;
+    color: var(--code-text); line-height: 2; margin: 14px 0;
+  }
+  .file-tree .new { color: #80e080; }
+  .file-tree .changed { color: #ffd080; }
+  .file-tree .dir { color: #80c0ff; }
+
+  /* Field table */
+  .field-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.9rem; }
+  .field-table th { background: var(--warm); padding: 10px 14px; text-align: left; font-weight: 800; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); border-bottom: 2px solid var(--border); }
+  .field-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .field-table tr:hover td { background: var(--warm); }
+  .field-table code { background: var(--warm); padding: 2px 7px; border-radius: 5px; font-size: 0.83rem; color: var(--accent); font-family: 'Courier New', monospace; }
+  .req { color: var(--accent); font-weight: 800; }
+
+  /* Section divider */
+  .divider { border: none; border-top: 2px solid var(--border); margin: 48px 0; }
+  .section-label {
+    font-size: 0.72rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 2.5px; color: var(--muted); margin-bottom: 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* Example */
+  .example-card {
+    background: white; border: 1.5px solid var(--border); border-radius: 14px;
+    padding: 24px; margin: 14px 0;
+  }
+  .example-card h4 { font-family: 'Lora', serif; font-size: 1rem; margin-bottom: 12px; color: var(--dark); }
+
+  @media (max-width: 768px) {
+    .site-header { padding: 0 16px; }
+    .hero { padding: 36px 20px 32px; }
+    .content { padding: 28px 20px; }
+    .step-block { grid-template-columns: 36px 1fr; gap: 0 16px; }
+    .step-num { width: 36px; height: 36px; font-size: 0.9rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="index.html" class="back-link">← Zurück zur Sammlung</a>
+  <a href="index.html" class="site-logo">Meine <em>Rezepte</em></a>
+</header>
+
+<div class="hero">
+  <div class="hero-badge">Anleitung</div>
+  <h1>Neues Rezept hinzufügen</h1>
+  <p>So fügst du mit Claudes Hilfe ein neues Rezept zur Sammlung hinzu – Schritt für Schritt erklärt.</p>
+</div>
+
+<div class="content">
+
+  <div class="section-label">Wie funktioniert das?</div>
+
+  <p style="margin-bottom:28px;font-size:1.02rem;color:#5a4030;">
+    Jedes Rezept ist eine eigenständige HTML-Datei in deinem GitHub-Repository. Um ein neues Rezept hinzuzufügen, sagst du Claude einfach was du kochen möchtest – Claude erstellt dann zwei Dinge: die fertige HTML-Seite und den aktualisierten Eintrag für die <code style="background:var(--warm);padding:2px 7px;border-radius:5px;font-family:monospace;color:var(--accent)">rezepte.json</code>. Du lädst beide Dateien ins Repository hoch – fertig.
+  </p>
+
+  <!-- STEP 1 -->
+  <div class="step-block">
+    <div class="step-num">1</div>
+    <div class="step-content">
+      <div class="step-title">Neue Konversation mit Claude starten</div>
+      <p class="step-text">Öffne claude.ai und starte eine neue Unterhaltung. Lade die aktuelle <strong>rezepte.json</strong> aus deinem Repository als Datei hoch – Claude braucht sie, um den neuen Eintrag korrekt anzuhängen und die ID eindeutig zu vergeben.</p>
+      <div class="info-box tip">
+        <span class="info-icon">💡</span>
+        <span>Die <strong>rezepte.json</strong> findest du in deinem GitHub-Repository. Einfach herunterladen, bei Claude hochladen – fertig.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step-block">
+    <div class="step-num">2</div>
+    <div class="step-content">
+      <div class="step-title">Das Rezept beschreiben</div>
+      <p class="step-text">Schreib Claude das Rezept – so detailliert oder stichwortartig wie du möchtest. Claude formuliert alles schön aus, schlägt passende Tags vor und fragt nach, wenn etwas fehlt. Hier ist eine Vorlage die du kopieren und ausfüllen kannst:</p>
+
+      <div class="prompt-box">
+        <div class="prompt-header">
+          <span class="prompt-label">Vorlage – Rezept beschreiben</span>
+          <button class="copy-btn" onclick="copyPrompt('p1')">Kopieren</button>
+        </div>
+        <div class="prompt-body" id="p1">Ich habe die rezepte.json hochgeladen. Bitte füge folgendes neues Rezept hinzu:
+
+<span class="hl">Name:</span> [Rezeptname]
+<span class="hl">Kategorie:</span> [Kuchen / Hauptgericht / Beilage / Dessert / Sonstiges]
+<span class="hl">Emoji:</span> [passendes Emoji]
+<span class="hl">Von wem:</span> [z.B. Oma, eigenes Rezept, ...]
+<span class="hl">Portionen:</span> [z.B. 4 Personen]
+<span class="hl">Zeitaufwand:</span> [z.B. 45 Minuten]
+
+<span class="hl">Zutaten:</span>
+[Liste der Zutaten mit Mengen]
+
+<span class="hl">Zubereitung:</span>
+[Schritte – stichwortartig reicht, Claude formuliert es aus]
+
+<span class="hl">Tipp (optional):</span>
+[besondere Hinweise oder Variationen]
+
+<span class="comment">-- Bitte erstelle:
+   1. Die fertige HTML-Datei für die Rezeptseite
+   2. Den aktualisierten rezepte.json-Eintrag
+   Halte dich dabei an den Stil und das Design der anderen Rezeptseiten.</span></div>
+      </div>
+
+      <div class="info-box note">
+        <span class="info-icon">ℹ️</span>
+        <span>Du musst die Vorlage nicht exakt ausfüllen. Auch eine lockere Beschreibung funktioniert – Claude fragt nach, wenn etwas wichtiges fehlt.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step-block">
+    <div class="step-num">3</div>
+    <div class="step-content">
+      <div class="step-title">Claude erstellt die Dateien</div>
+      <p class="step-text">Claude liefert dir zwei Dinge zum Download:</p>
+
+      <div class="file-tree">
+<span class="new">neu-rezept-name.html</span>      ← die fertige Rezeptseite
+<span class="changed">rezepte.json</span>               ← aktualisiert mit dem neuen Eintrag
+      </div>
+
+      <p class="step-text">Die HTML-Datei ist sofort fertig – mit Übersicht, Einkaufsliste und Kochmodus. Der Name der Datei folgt dem Schema <code style="background:var(--warm);padding:2px 6px;border-radius:4px;font-family:monospace;color:var(--accent)">rezeptname-kleinbuchstaben.html</code>, also z.B. <code style="background:var(--warm);padding:2px 6px;border-radius:4px;font-family:monospace;color:var(--accent)">omas-gulasch.html</code>.</p>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="step-block">
+    <div class="step-num green">4</div>
+    <div class="step-content">
+      <div class="step-title">Ins GitHub-Repository hochladen</div>
+      <p class="step-text">Lade die beiden Dateien in dein Repository hoch. GitHub Pages veröffentlicht sie automatisch – die neue Rezeptkarte erscheint sofort auf der Startseite und ist über die Suche auffindbar.</p>
+
+      <div class="info-box tip">
+        <span class="info-icon">💡</span>
+        <span>Auf GitHub einfach <strong>„Add file" → „Upload files"</strong> klicken, beide Dateien hinziehen, und auf <strong>„Commit changes"</strong> klicken. Nach etwa einer Minute ist die Seite live.</span>
+      </div>
+
+      <div class="info-box warn">
+        <span class="info-icon">⚠️</span>
+        <span>Die <strong>rezepte.json ersetzen</strong>, nicht neu erstellen – sonst gehen die alten Einträge verloren. GitHub fragt automatisch nach, ob die bestehende Datei ersetzt werden soll.</span>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- EXAMPLE -->
+  <div class="section-label">Beispiel</div>
+
+  <p style="margin-bottom:20px;font-size:0.97rem;color:#5a4030;">So könnte eine echte Anfrage aussehen – ganz entspannt, ohne strenge Vorlage:</p>
+
+  <div class="example-card">
+    <h4>💬 Beispiel-Nachricht an Claude</h4>
+    <div class="prompt-box" style="margin-top:0">
+      <div class="prompt-header">
+        <span class="prompt-label">Beispiel</span>
+        <button class="copy-btn" onclick="copyPrompt('p2')">Kopieren</button>
+      </div>
+      <div class="prompt-body" id="p2">Ich habe die rezepte.json hochgeladen. Füge bitte ein neues Rezept hinzu:
+
+<span class="hl">Name:</span> Omas Gulasch
+<span class="hl">Kategorie:</span> Hauptgericht
+<span class="hl">Von:</span> Oma Hildegard
+<span class="hl">Portionen:</span> 6 Personen
+<span class="hl">Zeit:</span> ca. 2 Stunden
+
+<span class="hl">Zutaten:</span>
+1 kg Rindfleisch (Schulter), 4 Zwiebeln, 2 EL Paprikapulver (edelsüß),
+1 EL Paprikapulver (scharf), 2 EL Tomatenmark, 400 ml Rinderbrühe,
+2 Knoblauchzehen, Öl, Salz, Pfeffer, Kümmel, 1 Lorbeerblatt
+
+<span class="hl">Zubereitung:</span>
+Fleisch würfeln und scharf anbraten. Rausnehmen.
+Zwiebeln im gleichen Topf goldbraun braten.
+Tomatenmark kurz mitrösten, Paprika dazu.
+Fleisch zurück, Brühe angießen, Knoblauch, Lorbeer, Kümmel rein.
+2 Stunden bei niedriger Hitze schmoren lassen. Abschmecken.
+
+<span class="hl">Tipp:</span>
+Am nächsten Tag schmeckt es noch besser!</div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- FIELDS REFERENCE -->
+  <div class="section-label">Felder-Übersicht</div>
+
+  <p style="margin-bottom:16px;font-size:0.93rem;color:#5a4030;">Das muss Claude wissen – Pflichtfelder sind markiert:</p>
+
+  <table class="field-table">
+    <thead>
+      <tr><th>Feld</th><th>Beispiel</th><th>Pflicht?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>Name</code></td><td>Omas Gulasch</td><td><span class="req">✓ Ja</span></td></tr>
+      <tr><td><code>Kategorie</code></td><td>Kuchen / Hauptgericht / Beilage / Dessert / Sonstiges</td><td><span class="req">✓ Ja</span></td></tr>
+      <tr><td><code>Zutaten</code></td><td>1 kg Rindfleisch, 4 Zwiebeln …</td><td><span class="req">✓ Ja</span></td></tr>
+      <tr><td><code>Zubereitung</code></td><td>Stichwortartig reicht völlig</td><td><span class="req">✓ Ja</span></td></tr>
+      <tr><td><code>Emoji</code></td><td>🍲</td><td>Nein – Claude wählt selbst</td></tr>
+      <tr><td><code>Von wem</code></td><td>Oma Hildegard</td><td>Nein</td></tr>
+      <tr><td><code>Portionen</code></td><td>6 Personen</td><td>Nein</td></tr>
+      <tr><td><code>Zeitaufwand</code></td><td>ca. 2 Stunden</td><td>Nein</td></tr>
+      <tr><td><code>Tipp</code></td><td>Am nächsten Tag noch besser!</td><td>Nein</td></tr>
+      <tr><td><code>Tags</code></td><td>winterlich, scharf, festlich …</td><td>Nein – Claude schlägt vor</td></tr>
+    </tbody>
+  </table>
+
+  <hr class="divider">
+
+  <!-- PHOTO -->
+  <div class="section-label">Foto hinzufügen</div>
+
+  <div class="step-block" style="margin-bottom:0">
+    <div class="step-num" style="background:var(--brown)">📷</div>
+    <div class="step-content">
+      <div class="step-title">Foto direkt auf der Rezeptseite</div>
+      <p class="step-text">Jede Rezeptseite hat oben rechts einen <strong>„📷 Foto"</strong>-Button. Einfach anklicken, Foto vom Handy oder Computer auswählen – es wird automatisch gespeichert und erscheint sofort als Titelbild. Das Foto bleibt im Browser gespeichert und muss nicht ins Repository hochgeladen werden.</p>
+      <div class="info-box tip">
+        <span class="info-icon">💡</span>
+        <span>Wer das Foto auf mehreren Geräten sehen möchte, kann es alternativ als <code style="font-family:monospace">bilder/rezeptname.jpg</code> ins Repository legen – Claude kann das beim Erstellen direkt mit einbauen.</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<style>
+  .toast {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--green); color: white; padding: 12px 28px;
+    border-radius: 50px; font-weight: 700; font-size: 0.92rem;
+    z-index: 9999; transition: transform 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2); pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+
+<script>
+function copyPrompt(id) {
+  const el = document.getElementById(id);
+  const text = el.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('✓ In die Zwischenablage kopiert!');
+  }).catch(() => {
+    showToast('Bitte manuell kopieren (Strg+A, Strg+C)');
+  });
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
