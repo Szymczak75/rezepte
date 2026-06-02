@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="de">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tacko-Auflauf – Meine Rezepte</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --cream: #faf7f2; --warm: #f2ebe0; --parchment: #e8dfc8; --brown: #6b4c2a; --dark: #2c1a0e; --accent: #c4783a; --green: #5e7a42; --light: #f8f3ea; --border: #ddd0b8; --shadow: rgba(44,26,14,0.10); --text: #3d2810; --muted: #9e8060; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Nunito', sans-serif; background: var(--cream); color: var(--text); }
+  .site-header { background: var(--dark); padding: 0 48px; height: 68px; display: flex; align-items: center; gap: 24px; position: sticky; top: 0; z-index: 200; box-shadow: 0 2px 24px rgba(0,0,0,0.25); }
+  .back-link { color: var(--parchment); text-decoration: none; font-size: 0.9rem; font-weight: 700; opacity: 0.7; transition: opacity 0.2s; }
+  .back-link:hover { opacity: 1; }
+  .site-logo { font-family: 'Lora', serif; font-size: 1.3rem; color: var(--parchment); text-decoration: none; }
+  .site-logo em { color: var(--accent); font-style: italic; }
+  .recipe-hero { width: 100%; height: 380px; background: linear-gradient(135deg, var(--warm) 0%, var(--parchment) 100%); position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 8rem; }
+  .recipe-hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(44,26,14,0.85) 0%, rgba(44,26,14,0.2) 60%, transparent 100%); }
+  .hero-content { position: absolute; bottom: 0; left: 0; right: 0; padding: 32px 48px; color: white; }
+  .hero-cat { font-size: 0.75rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+  .hero-title { font-family: 'Lora', serif; font-size: clamp(1.6rem, 4vw, 2.6rem); text-shadow: 0 2px 12px rgba(0,0,0,0.5); margin-bottom: 6px; }
+  .hero-origin { font-size: 0.9rem; opacity: 0.7; font-style: italic; }
+  .photo-btn { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.45); border: 1.5px solid rgba(255,255,255,0.35); color: white; padding: 9px 18px; border-radius: 50px; font-family: 'Nunito', sans-serif; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: background 0.2s; z-index: 10; }
+  .photo-btn:hover { background: rgba(196,120,58,0.75); }
+  #photoInput { display: none; }
+  .tab-bar { background: white; border-bottom: 2px solid var(--border); padding: 0 48px; display: flex; position: sticky; top: 68px; z-index: 100; }
+  .tab-btn { padding: 18px 24px; border: none; background: none; font-family: 'Nunito', sans-serif; font-size: 0.95rem; font-weight: 700; color: var(--muted); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.18s; white-space: nowrap; }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-pane { display: none; } .tab-pane.active { display: block; }
+  .content-wrap { max-width: 860px; margin: 0 auto; padding: 40px 48px; }
+  .meta-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-bottom: 32px; }
+  .meta-box { background: white; border: 1.5px solid var(--border); border-radius: 14px; padding: 16px; text-align: center; }
+  .meta-box .ico { font-size: 1.6rem; margin-bottom: 5px; } .meta-box .lbl { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); font-weight: 800; } .meta-box .val { font-size: 0.95rem; font-weight: 700; color: var(--dark); margin-top: 3px; }
+  .description-box { background: var(--warm); border-left: 4px solid var(--accent); border-radius: 0 12px 12px 0; padding: 22px 24px; font-size: 1.02rem; line-height: 1.8; color: var(--text); margin-bottom: 24px; }
+  .note-box { background: #fffbf0; border: 1.5px solid #f0d060; border-radius: 12px; padding: 16px 20px; font-size: 0.92rem; line-height: 1.7; color: #7a6010; margin-bottom: 24px; display: flex; gap: 12px; align-items: flex-start; }
+  .note-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
+  .tags-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .tag-pill { padding: 5px 14px; border-radius: 50px; background: var(--warm); border: 1.5px solid var(--border); color: var(--brown); font-size: 0.8rem; font-weight: 700; }
+  .shopping-actions { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+  .action-btn { padding: 9px 20px; border-radius: 50px; border: 1.5px solid var(--border); background: white; color: var(--brown); font-family: 'Nunito', sans-serif; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: all 0.18s; }
+  .action-btn:hover { background: var(--accent); border-color: var(--accent); color: white; }
+  .section-header { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); margin: 20px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); list-style: none; }
+  .shopping-list { list-style: none; }
+  .shop-item { display: flex; align-items: center; gap: 14px; padding: 13px 16px; border-radius: 10px; cursor: pointer; transition: background 0.12s; margin-bottom: 3px; }
+  .shop-item:hover { background: var(--warm); } .shop-item.checked { opacity: 0.4; } .shop-item.checked .item-name { text-decoration: line-through; }
+  .check-circle { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; flex-shrink: 0; background: white; color: transparent; }
+  .shop-item.checked .check-circle { background: var(--green); border-color: var(--green); color: white; }
+  .item-name { flex: 1; font-size: 0.98rem; } .item-amount { font-weight: 800; color: var(--accent); font-size: 0.9rem; }
+  .progress-wrap { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; background: white; padding: 16px 20px; border-radius: 14px; border: 1.5px solid var(--border); }
+  .prog-bar { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .prog-fill { height: 100%; background: var(--green); border-radius: 4px; transition: width 0.4s ease; }
+  .prog-text { font-size: 0.85rem; font-weight: 700; color: var(--muted); white-space: nowrap; }
+  .cook-step { background: white; border: 2px solid var(--border); border-radius: 16px; padding: 24px 28px; margin-bottom: 14px; transition: all 0.25s; cursor: pointer; }
+  .cook-step.active { border-color: var(--accent); box-shadow: 0 6px 28px rgba(196,120,58,0.18); }
+  .cook-step.done { border-color: var(--green); background: #f4f9f0; opacity: 0.65; }
+  .step-head { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+  .step-num { width: 36px; height: 36px; border-radius: 50%; background: var(--parchment); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.9rem; flex-shrink: 0; color: var(--brown); }
+  .cook-step.active .step-num { background: var(--accent); color: white; } .cook-step.done .step-num { background: var(--green); color: white; }
+  .step-title { font-family: 'Lora', serif; font-size: 1.1rem; font-weight: 600; color: var(--dark); }
+  .step-text { font-size: 0.97rem; line-height: 1.78; color: #5a4030; }
+  .timer-block { margin-top: 18px; background: var(--warm); border-radius: 12px; padding: 14px 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .timer-digits { font-family: 'Lora', serif; font-size: 2rem; font-weight: 700; color: var(--dark); min-width: 80px; }
+  .timer-digits.running { color: var(--accent); } .timer-digits.finished { color: var(--green); }
+  .timer-action { padding: 8px 20px; border-radius: 50px; border: none; font-family: 'Nunito', sans-serif; font-size: 0.88rem; font-weight: 800; cursor: pointer; }
+  .t-start { background: var(--accent); color: white; } .t-start:hover { background: #a86030; } .t-reset { background: var(--parchment); color: var(--dark); }
+  .step-nav { display: flex; gap: 14px; margin-top: 28px; }
+  .nav-btn { flex: 1; max-width: 180px; padding: 14px 20px; border-radius: 50px; border: none; font-family: 'Nunito', sans-serif; font-size: 0.97rem; font-weight: 800; cursor: pointer; }
+  .nav-prev { background: var(--warm); color: var(--dark); border: 1.5px solid var(--border); } .nav-prev:hover { background: var(--border); }
+  .nav-next { background: var(--accent); color: white; } .nav-next:hover { background: #a86030; } .nav-next:disabled { background: var(--green); cursor: default; }
+  .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--green); color: white; padding: 12px 28px; border-radius: 50px; font-weight: 700; font-size: 0.92rem; z-index: 9999; transition: transform 0.3s ease; box-shadow: 0 4px 20px rgba(0,0,0,0.2); pointer-events: none; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  @media (max-width: 768px) { .site-header { padding: 0 16px; } .recipe-hero { height: 260px; font-size: 5rem; } .hero-content { padding: 20px; } .tab-bar { padding: 0 8px; overflow-x: auto; } .tab-btn { padding: 16px 12px; font-size: 0.85rem; } .content-wrap { padding: 24px 16px; } }
+</style></head>
+<body data-id="tacko-auflauf">
+<header class="site-header"><a href="index.html" class="back-link">← Zurück</a><a href="index.html" class="site-logo">Meine <em>Rezepte</em></a></header>
+<div class="recipe-hero"><img id="heroImg" src="" style="display:none" alt="Tacko-Auflauf"><span id="heroEmoji">🌮</span><div class="hero-overlay"></div><div class="hero-content"><div class="hero-cat">Hauptgericht</div><h1 class="hero-title">Tacko-Auflauf</h1><div class="hero-origin">Von: Von Andi</div></div><button class="photo-btn" onclick="document.getElementById('photoInput').click()">📷 Foto</button><input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)"></div>
+<div class="tab-bar"><button class="tab-btn active" onclick="switchTab('overview',this)">📋 Übersicht</button><button class="tab-btn" onclick="switchTab('shopping',this)">🛒 Einkauf</button><button class="tab-btn" onclick="switchTab('cook',this)">👨‍🍳 Kochmodus</button></div>
+<div class="tab-pane active" id="pane-overview"><div class="content-wrap"><div class="meta-row"><div class="meta-box"><div class="ico">👥</div><div class="lbl">Portionen</div><div class="val">4 Portionen</div></div>
+<div class="meta-box"><div class="ico">⏱️</div><div class="lbl">Zeit</div><div class="val">50 Minuten</div></div>
+<div class="meta-box"><div class="ico">👩‍🍳</div><div class="lbl">Von</div><div class="val">Von Andi</div></div>
+<div class="meta-box"><div class="ico">📝</div><div class="lbl">Zutaten</div><div class="val">11</div></div>
+<div class="meta-box"><div class="ico">👨‍🍳</div><div class="lbl">Schritte</div><div class="val">5</div></div></div><div class="description-box">Andis mexikanisch inspirierter Auflauf vereint saftiges Putenbrustfilet mit buntem Paprika, Kidney-Bohnen und Mais – alles überbacken mit würzigem Käse und kurz vor Ende mit knusprigen Tacos bestreut. Schnell zusammengestellt und immer ein Treffer.</div><div class="tags-row"><span class="tag-pill">mexikanisch</span><span class="tag-pill">auflauf</span><span class="tag-pill">pute</span><span class="tag-pill">käse</span><span class="tag-pill">würzig</span><span class="tag-pill">schnell</span></div></div></div>
+<div class="tab-pane" id="pane-shopping"><div class="content-wrap"><div class="shopping-actions"><button class="action-btn" onclick="uncheckAll()">↺ Alle zurücksetzen</button><button class="action-btn" onclick="checkAll()">✓ Alle abhaken</button></div><ul class="shopping-list"><li class="shop-item" id="si-0" onclick="toggleShop(0)"><div class="check-circle">✓</div><span class="item-name">Putenbrustfilet</span><span class="item-amount">300g</span></li>
+<li class="shop-item" id="si-1" onclick="toggleShop(1)"><div class="check-circle">✓</div><span class="item-name">Kidney-Bohnen</span><span class="item-amount">125g</span></li>
+<li class="shop-item" id="si-2" onclick="toggleShop(2)"><div class="check-circle">✓</div><span class="item-name">Mais</span><span class="item-amount">100g</span></li>
+<li class="shop-item" id="si-3" onclick="toggleShop(3)"><div class="check-circle">✓</div><span class="item-name">grüne Paprika</span><span class="item-amount">1</span></li>
+<li class="shop-item" id="si-4" onclick="toggleShop(4)"><div class="check-circle">✓</div><span class="item-name">rote Paprika</span><span class="item-amount">1</span></li>
+<li class="shop-item" id="si-5" onclick="toggleShop(5)"><div class="check-circle">✓</div><span class="item-name">Tacos</span><span class="item-amount">100g</span></li>
+<li class="shop-item" id="si-6" onclick="toggleShop(6)"><div class="check-circle">✓</div><span class="item-name">geriebener Käse</span><span class="item-amount">250g</span></li>
+<li class="shop-item" id="si-7" onclick="toggleShop(7)"><div class="check-circle">✓</div><span class="item-name">saure Sahne</span><span class="item-amount">100 ml</span></li>
+<li class="shop-item" id="si-8" onclick="toggleShop(8)"><div class="check-circle">✓</div><span class="item-name">Milch</span><span class="item-amount">60 ml</span></li>
+<li class="shop-item" id="si-9" onclick="toggleShop(9)"><div class="check-circle">✓</div><span class="item-name">Ei</span><span class="item-amount">1</span></li>
+<li class="shop-item" id="si-10" onclick="toggleShop(10)"><div class="check-circle">✓</div><span class="item-name">Öl, Salz, Pfeffer, Paprikagewürz, Chili</span><span class="item-amount">nach Geschmack</span></li>
+</ul></div></div>
+<div class="tab-pane" id="pane-cook"><div class="content-wrap"><div class="progress-wrap"><div class="prog-bar"><div class="prog-fill" id="progFill"></div></div><span class="prog-text" id="progText"></span></div><div class="cook-step" onclick="goStep(0)"><div class="step-head"><div class="step-num">1</div><div class="step-title">Ofen vorheizen</div></div><div class="step-text">Den Ofen auf 180–200 °C Ober-/Unterhitze vorheizen (Heißluft: 160–180 °C, dann nicht vorheizen).</div></div>
+<div class="cook-step" onclick="goStep(1)"><div class="step-head"><div class="step-num">2</div><div class="step-title">Pute anbraten</div></div><div class="step-text">Das Putenbrustfilet abwaschen, in mundgerechte Stücke schneiden und in etwas Öl rundherum anbraten.</div></div>
+<div class="cook-step" onclick="goStep(2)"><div class="step-head"><div class="step-num">3</div><div class="step-title">Gemüse vorbereiten</div></div><div class="step-text">Beide Paprikas waschen, entkernen und in Streifen schneiden. Gemeinsam mit dem Fleisch, den Bohnen und dem Mais in eine Auflaufform geben.</div></div>
+<div class="cook-step" onclick="goStep(3)"><div class="step-head"><div class="step-num">4</div><div class="step-title">Eiermilch anrühren</div></div><div class="step-text">Saure Sahne, Milch und Ei gründlich verquirlen. Mit Salz, Pfeffer, Paprikagewürz und Chili würzen. Die Eiermilch gleichmäßig über den Auflauf gießen und den geriebenen Käse darüberstreuen.</div></div>
+<div class="cook-step" onclick="goStep(4)"><div class="step-head"><div class="step-num">5</div><div class="step-title">Backen</div></div><div class="step-text">Den Auflauf 30–45 Minuten backen. Kurz vor Ende die Tacos gleichmäßig auf dem Auflauf verteilen, damit sie goldbraun werden.</div><div class="timer-block"><span style="font-size:1.3rem">⏱️</span><span class="timer-digits" id="t_tacko-auflauf_4-disp">37:00</span><button class="timer-action t-start" id="t_tacko-auflauf_4-btn" onclick="toggleTimer('t_tacko-auflauf_4',2220)">Start</button><button class="timer-action t-reset" onclick="resetTimer('t_tacko-auflauf_4',2220)">Reset</button></div></div>
+<div class="step-nav"><button class="nav-btn nav-prev" id="btnPrev" onclick="prevStep()">← Zurück</button><button class="nav-btn nav-next" id="btnNext" onclick="nextStep()">Weiter →</button></div></div></div>
+<div class="toast" id="toast"></div>
+<script>
+  let currentStep=0,timers={};
+  const recipeId=document.body.dataset.id;
+  const stored=localStorage.getItem('photo_'+recipeId);
+  if(stored)setPhoto(stored);
+  function handlePhoto(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{localStorage.setItem('photo_'+recipeId,ev.target.result);setPhoto(ev.target.result);showToast('📷 Foto gespeichert!');};r.readAsDataURL(file);}
+  function setPhoto(src){const img=document.getElementById('heroImg');img.src=src;img.style.display='block';document.getElementById('heroEmoji').style.display='none';}
+  function switchTab(name,btn){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));btn.classList.add('active');document.getElementById('pane-'+name).classList.add('active');}
+  function toggleShop(i){document.getElementById('si-'+i)?.classList.toggle('checked');}
+  function uncheckAll(){document.querySelectorAll('.shop-item').forEach(el=>el.classList.remove('checked'));}
+  function checkAll(){document.querySelectorAll('.shop-item').forEach(el=>el.classList.add('checked'));}
+  const totalSteps=document.querySelectorAll('.cook-step').length;
+  function renderCook(){const steps=document.querySelectorAll('.cook-step');steps.forEach((el,i)=>{el.className='cook-step'+(i===currentStep?' active':i<currentStep?' done':'');el.querySelector('.step-num').textContent=i<currentStep?'✓':(i+1);});const pct=totalSteps>1?(currentStep/(totalSteps-1))*100:100;document.getElementById('progFill').style.width=pct+'%';document.getElementById('progText').textContent='Schritt '+(currentStep+1)+' / '+totalSteps;document.getElementById('btnPrev').disabled=currentStep===0;const nb=document.getElementById('btnNext');if(currentStep>=totalSteps-1){nb.textContent='✓ Fertig!';nb.disabled=true;}else{nb.textContent='Weiter →';nb.disabled=false;}}
+  function goStep(i){currentStep=i;renderCook();}
+  function nextStep(){if(currentStep<totalSteps-1){currentStep++;renderCook();}}
+  function prevStep(){if(currentStep>0){currentStep--;renderCook();}}
+  renderCook();
+  function toggleTimer(tid,total){if(!timers[tid])timers[tid]={remaining:total,running:false,finished:false};const t=timers[tid];if(t.running){clearInterval(t.iv);t.running=false;const b=document.getElementById(tid+'-btn');if(b)b.textContent='Weiter';}else{t.running=true;const b=document.getElementById(tid+'-btn');if(b)b.textContent='Pause';t.iv=setInterval(()=>{t.remaining--;const d=document.getElementById(tid+'-disp');if(!d){clearInterval(t.iv);return;}if(t.remaining<=0){clearInterval(t.iv);t.running=false;t.finished=true;d.textContent='✓ Fertig!';d.className='timer-digits finished';const b2=document.getElementById(tid+'-btn');if(b2)b2.textContent='Start';showToast('⏰ Timer abgelaufen!');}else{d.textContent=fmt(t.remaining);d.className='timer-digits running';}},1000);}}
+  function resetTimer(tid,total){if(timers[tid]?.iv)clearInterval(timers[tid].iv);timers[tid]={remaining:total,running:false,finished:false};const d=document.getElementById(tid+'-disp');if(d){d.textContent=fmt(total);d.className='timer-digits';}const b=document.getElementById(tid+'-btn');if(b)b.textContent='Start';}
+  function fmt(s){const m=Math.floor(s/60),sec=s%60;return m+':'+(String(sec).padStart(2,'0'));}
+  function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+</script>
+</body></html>

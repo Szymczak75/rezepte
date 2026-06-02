@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meine Rezeptsammlung</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #faf7f2; --warm: #f2ebe0; --parchment: #e8dfc8;
+    --brown: #6b4c2a; --dark: #2c1a0e; --accent: #c4783a;
+    --green: #5e7a42; --light: #f8f3ea; --border: #ddd0b8;
+    --shadow: rgba(44,26,14,0.10); --text: #3d2810; --muted: #9e8060;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Nunito', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; }
+
+  .site-header {
+    background: var(--dark); padding: 0 48px; height: 68px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 200;
+    box-shadow: 0 2px 24px rgba(0,0,0,0.25);
+  }
+  .site-logo { font-family: 'Lora', serif; font-size: 1.5rem; color: var(--parchment); text-decoration: none; }
+  .site-logo em { color: var(--accent); font-style: italic; }
+  .header-count { font-size: 0.82rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+
+  .hero {
+    background: linear-gradient(160deg, #2c1a0e 0%, #5a3318 60%, #7a4a22 100%);
+    padding: 64px 48px 52px; position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23ffffff' fill-opacity='0.025'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  .hero-inner { position: relative; max-width: 720px; }
+  .hero h1 { font-family: 'Lora', serif; font-size: clamp(2rem,5vw,3.2rem); color: var(--parchment); line-height: 1.2; margin-bottom: 12px; }
+  .hero h1 em { color: var(--accent); }
+  .hero p { color: #c8a878; font-size: 1.05rem; font-weight: 300; margin-bottom: 32px; }
+
+  .search-wrap { position: relative; max-width: 560px; }
+  .search-icon { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+  #searchInput {
+    width: 100%; padding: 15px 18px 15px 48px;
+    border: 1.5px solid rgba(255,255,255,0.15); border-radius: 50px;
+    font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 600;
+    background: rgba(255,255,255,0.12); color: white; outline: none;
+  }
+  #searchInput::placeholder { color: rgba(255,255,255,0.4); font-weight: 400; }
+  #searchInput:focus { background: rgba(255,255,255,0.18); border-color: var(--accent); }
+  .search-hint { font-size: 0.78rem; color: rgba(255,255,255,0.3); margin-top: 10px; padding-left: 4px; }
+
+  .filter-section {
+    background: var(--warm); border-bottom: 1px solid var(--border);
+    padding: 16px 48px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .filter-label { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-right: 4px; }
+  .filter-chip {
+    padding: 6px 16px; border-radius: 50px; border: 1.5px solid var(--border);
+    background: white; color: var(--brown); font-family: 'Nunito', sans-serif;
+    font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.18s; white-space: nowrap;
+  }
+  .filter-chip:hover { border-color: var(--accent); color: var(--accent); }
+  .filter-chip.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+  .results-bar {
+    padding: 14px 48px; display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border); background: var(--light);
+  }
+  .results-count { font-size: 0.88rem; color: var(--muted); font-weight: 600; }
+  .clear-btn { font-size: 0.82rem; color: var(--accent); background: none; border: none; cursor: pointer; font-family: 'Nunito', sans-serif; font-weight: 700; display: none; }
+  .clear-btn.visible { display: block; }
+
+  .recipe-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 28px; padding: 40px 48px; max-width: 1600px; margin: 0 auto;
+  }
+
+  .recipe-card {
+    background: white; border-radius: 18px; overflow: hidden;
+    box-shadow: 0 2px 16px var(--shadow); cursor: pointer; text-decoration: none;
+    color: inherit; transition: transform 0.22s cubic-bezier(.22,.68,0,1.2), box-shadow 0.22s;
+    border: 1px solid var(--border); display: block;
+  }
+  .recipe-card:hover { transform: translateY(-6px); box-shadow: 0 16px 48px rgba(44,26,14,0.16); }
+
+  .card-thumb {
+    height: 190px; background: linear-gradient(135deg, var(--warm) 0%, var(--parchment) 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 4.5rem; position: relative; overflow: hidden;
+  }
+  .card-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .card-thumb-emoji { position: relative; z-index: 1; }
+
+  .card-body { padding: 20px 22px 18px; }
+  .card-cat { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); margin-bottom: 8px; }
+  .card-title { font-family: 'Lora', serif; font-size: 1.15rem; line-height: 1.35; color: var(--dark); margin-bottom: 8px; font-weight: 600; }
+  .card-desc { font-size: 0.84rem; color: var(--muted); line-height: 1.55; margin-bottom: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+  .card-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
+  .tag { padding: 3px 10px; border-radius: 50px; background: var(--warm); color: var(--brown); font-size: 0.72rem; font-weight: 700; border: 1px solid var(--border); }
+  .tag.highlight { background: #fff3e0; border-color: var(--accent); color: var(--accent); }
+
+  .card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--border); }
+  .card-meta-item { font-size: 0.8rem; color: var(--muted); }
+  .card-origin { font-size: 0.78rem; color: var(--brown); font-style: italic; }
+
+  .empty-state { grid-column: 1/-1; text-align: center; padding: 80px 24px; color: var(--muted); }
+  .empty-state .emoji { font-size: 4rem; display: block; margin-bottom: 16px; }
+  .empty-state h3 { font-family: 'Lora', serif; font-size: 1.4rem; margin-bottom: 8px; color: var(--brown); }
+
+  mark { background: rgba(196,120,58,0.2); color: inherit; border-radius: 2px; padding: 0 1px; }
+
+  @media (max-width: 768px) {
+    .site-header { padding: 0 20px; }
+    .hero { padding: 40px 20px 36px; }
+    .filter-section { padding: 14px 20px; }
+    .results-bar { padding: 12px 20px; }
+    .recipe-grid { padding: 24px 16px; gap: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a href="index.html" class="site-logo">Meine <em>Rezepte</em></a>
+  <span class="header-count" id="headerCount"></span>
+</header>
+
+<section class="hero">
+  <div class="hero-inner">
+    <h1>Unsere<br><em>Familienrezepte</em></h1>
+    <p>Bewährte Klassiker, Familiengeheimrezepte und neue Lieblinge</p>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Suche nach Rezept, Zutat oder Tag …" autocomplete="off" oninput="onSearch()">
+    </div>
+    <p class="search-hint">z.B. „Äpfel", „glutenfrei", „schnell", „Oma" …</p>
+  </div>
+</section>
+
+<div class="filter-section">
+  <span class="filter-label">Kategorie</span>
+  <button class="filter-chip active" onclick="setFilter('alle',this)">Alle</button>
+  <button class="filter-chip" onclick="setFilter('Kuchen',this)">🎂 Kuchen</button>
+  <button class="filter-chip" onclick="setFilter('Hauptgericht',this)">🍽️ Hauptgericht</button>
+  <button class="filter-chip" onclick="setFilter('Beilage',this)">🥗 Beilage</button>
+  <button class="filter-chip" onclick="setFilter('Dessert',this)">🍮 Dessert</button>
+  <button class="filter-chip" onclick="setFilter('Sonstiges',this)">✨ Sonstiges</button>
+</div>
+
+<div class="results-bar">
+  <span class="results-count" id="resultsCount"></span>
+  <button class="clear-btn" id="clearBtn" onclick="clearSearch()">✕ Suche zurücksetzen</button>
+</div>
+
+<main class="recipe-grid" id="recipeGrid"></main>
+
+<script>
+// Alle Rezepte sind hier direkt eingebettet – kein fetch() nötig
+const ALL_RECIPES = [
+  {
+    "id": "apfel-mohnkuchen",
+    "name": "Apfel-Mohnkuchen",
+    "category": "Kuchen",
+    "emoji": "🍎",
+    "origin": "Eigenes Rezept",
+    "time": "35 Minuten",
+    "description": "Ein saftiger Kuchen, der ohne Getreide auskommt und trotzdem begeistert. Kokosmehl, gemahlene Mandeln und frischer Mohn bilden die Basis, während zwei verschiedene Apfelzubereitungen – fein gehobelt und in Würfeln – für Saftigkeit und Biss sorgen. Perfekt in Schnittenform aus der quadratischen Auflaufform.",
+    "tags": [
+      "glutenfrei",
+      "paleo",
+      "saftig",
+      "mohn",
+      "apfel"
+    ],
+    "ingredients": [
+      {
+        "name": "Kokosmehl"
+      },
+      {
+        "name": "gemahlene Mandeln"
+      },
+      {
+        "name": "gemahlener Mohn"
+      },
+      {
+        "name": "Kokosöl"
+      },
+      {
+        "name": "saure Äpfel"
+      },
+      {
+        "name": "Honig"
+      },
+      {
+        "name": "Eier"
+      },
+      {
+        "name": "Zimt"
+      },
+      {
+        "name": "Weinstein-Backpulver"
+      }
+    ]
+  },
+  {
+    "id": "paleo-karottenkuchen",
+    "name": "Paleo Karottenkuchen",
+    "category": "Kuchen",
+    "emoji": "🥕",
+    "origin": "Eigenes Rezept",
+    "time": "60 Minuten",
+    "description": "Ein saftiger Karottenkuchen ganz ohne Mehl und raffinierten Zucker – gesüßt nur mit Datteln und getoppt mit einem cremigen Kokos-Frosting. Durch die frisch geriebenen Karotten und den Ingwer bleibt er herrlich saftig und bekommt eine leichte, würzige Note.",
+    "tags": [
+      "paleo",
+      "glutenfrei",
+      "zuckerfrei",
+      "karotte",
+      "frosting"
+    ],
+    "ingredients": [
+      {
+        "name": "Eier"
+      },
+      {
+        "name": "Kokosöl"
+      },
+      {
+        "name": "Karotten"
+      },
+      {
+        "name": "Datteln"
+      },
+      {
+        "name": "gemahlene Mandeln"
+      },
+      {
+        "name": "Zimt"
+      },
+      {
+        "name": "frisch geriebener Ingwer"
+      },
+      {
+        "name": "Salz"
+      },
+      {
+        "name": "Backpulver"
+      },
+      {
+        "name": "Kokosraspeln"
+      },
+      {
+        "name": "Kokosöl"
+      },
+      {
+        "name": "Honig"
+      },
+      {
+        "name": "Zitronensaft"
+      }
+    ]
+  },
+  {
+    "id": "paleo-apfelkuchen",
+    "name": "Paleo-Apfelkuchen",
+    "category": "Kuchen",
+    "emoji": "🍏",
+    "origin": "Eigenes Rezept",
+    "time": "40 Minuten",
+    "description": "Ein unkomplizierter Kuchen aus reinen Nussmehlen, der überraschend locker und saftig wird. Die Basis aus gemahlenen Mandeln und Haselnüssen wird mit cremig geschlagenen Eiern luftig gemacht, bevor frische Apfelspalten im Kreis darauf verteilt werden. Ein Klecks Apfelmus und etwas Zimt vollenden diesen simplen, aber wunderbaren Kuchen.",
+    "tags": [
+      "paleo",
+      "glutenfrei",
+      "apfel",
+      "nüsse",
+      "schnell"
+    ],
+    "ingredients": [
+      {
+        "name": "Eier"
+      },
+      {
+        "name": "Honig"
+      },
+      {
+        "name": "gemahlene Mandeln"
+      },
+      {
+        "name": "gemahlene Haselnüsse"
+      },
+      {
+        "name": "Butter oder Kokosöl (für die Form)"
+      },
+      {
+        "name": "Äpfel (je in 16 gleich große Spalten)"
+      },
+      {
+        "name": "Apfelmus"
+      },
+      {
+        "name": "Zimt"
+      }
+    ]
+  },
+  {
+    "id": "schoko-brownies-julia",
+    "name": "Schoko-Brownies vom Blech",
+    "category": "Kuchen",
+    "emoji": "🍫",
+    "origin": "Von Julia",
+    "time": "25 Minuten",
+    "description": "Julias legendäre Schoko-Brownies – saftig, intensiv und in wenigen Handgriffen fertig. Die Kombination aus reichlich Kakao, geschmolzener Margarine und grob gehackten Nüssen ergibt einen unwiderstehlich fudgigen Blechkuchen, der bei keinem Fest fehlen darf.",
+    "tags": [
+      "schokolade",
+      "schnell",
+      "brownies",
+      "blech",
+      "nüsse"
+    ],
+    "ingredients": [
+      {
+        "name": "Margarine (geschmolzen)"
+      },
+      {
+        "name": "Eier"
+      },
+      {
+        "name": "Zucker"
+      },
+      {
+        "name": "Mehl"
+      },
+      {
+        "name": "Kakao"
+      },
+      {
+        "name": "Vanillezucker"
+      },
+      {
+        "name": "Backpulver"
+      },
+      {
+        "name": "grob gehackte Mandeln, Nüsse oder Kokosraspeln"
+      }
+    ]
+  },
+  {
+    "id": "kaesekuchen-oma-brigitte",
+    "name": "Käsekuchen Oma Brigitte",
+    "category": "Kuchen",
+    "emoji": "🧀",
+    "origin": "Oma Brigitte",
+    "time": "ca. 90 Minuten",
+    "description": "Der Käsekuchen aus Oma Brigittes Küche – ein echter Familienklassiker mit knusprigem Mürbeteigboden, luftig-cremiger Quarkmasse und zartem Vanillearoma. Die selbst gemachte Vanillecreme aus echtem Puddingpulver und der untergehobene Eischnee machen ihn besonders locker. Ein Kuchen, der Geduld erfordert – und sich immer lohnt.",
+    "tags": [
+      "käsekuchen",
+      "klassiker",
+      "oma",
+      "quark",
+      "festlich"
+    ],
+    "ingredients": [
+      {
+        "name": "Mehl"
+      },
+      {
+        "name": "Backpulver (gestrichen)"
+      },
+      {
+        "name": "Zucker"
+      },
+      {
+        "name": "Eigelb"
+      },
+      {
+        "name": "Butter (weich, zimmerwarm)"
+      },
+      {
+        "name": "Vanille-Puddingpulver"
+      },
+      {
+        "name": "Milch"
+      },
+      {
+        "name": "Zucker"
+      },
+      {
+        "name": "Backaroma Zitrone"
+      },
+      {
+        "name": "Quark (trocken)"
+      },
+      {
+        "name": "Eiweiß (3 vom Teig + 1 extra)"
+      },
+      {
+        "name": "Zucker (für Eischnee)"
+      },
+      {
+        "name": "Rosinen (optional)"
+      },
+      {
+        "name": "Eigelb"
+      },
+      {
+        "name": "Milch"
+      }
+    ]
+  },
+  {
+    "id": "mohnkuchen",
+    "name": "Mohnkuchen",
+    "category": "Kuchen",
+    "emoji": "🌺",
+    "origin": "Eigenes Rezept",
+    "time": "35 Minuten",
+    "description": "Ein einfacher, aber ungemein saftiger Mohnkuchen mit Schmand im Teig – locker, aromatisch und mit einem doppelten Finish: frische Sahne auf dem noch heißen Kuchen und Schokoladenglasur nach dem Abkühlen.",
+    "tags": [
+      "mohn",
+      "saftig",
+      "schokolade",
+      "blech",
+      "schnell"
+    ],
+    "ingredients": [
+      {
+        "name": "Margarine"
+      },
+      {
+        "name": "Zucker"
+      },
+      {
+        "name": "Vanillezucker"
+      },
+      {
+        "name": "Eier"
+      },
+      {
+        "name": "Schmand"
+      },
+      {
+        "name": "Mehl"
+      },
+      {
+        "name": "Backpulver"
+      },
+      {
+        "name": "Mohnback"
+      },
+      {
+        "name": "süße Sahne"
+      },
+      {
+        "name": "Schokoladenglasur"
+      }
+    ]
+  },
+  {
+    "id": "rotweinkuchen",
+    "name": "Rotweinkuchen (Skipper)",
+    "category": "Kuchen",
+    "emoji": "🍷",
+    "origin": "Skipper",
+    "time": "55 Minuten",
+    "description": "Skippers Rotweinkuchen ist ein tief-aromatischer Blechkuchen mit würzigem Zimt, intensivem Kakao und Schokostreuseln im Teig. Der Rotwein macht ihn unglaublich saftig und gibt ihm eine charaktervolle Note – mit Kuvertüre überzogen ein echter Hingucker.",
+    "tags": [
+      "rotwein",
+      "schokolade",
+      "saftig",
+      "festlich",
+      "blech"
+    ],
+    "ingredients": [
+      {
+        "name": "Butter"
+      },
+      {
+        "name": "Zucker"
+      },
+      {
+        "name": "Vanillezucker"
+      },
+      {
+        "name": "Eier"
+      },
+      {
+        "name": "Mehl"
+      },
+      {
+        "name": "Backpulver"
+      },
+      {
+        "name": "Zimt"
+      },
+      {
+        "name": "Kakao"
+      },
+      {
+        "name": "Schokostreusel"
+      },
+      {
+        "name": "Rotwein"
+      },
+      {
+        "name": "Kuvertüre"
+      }
+    ]
+  },
+  {
+    "id": "philadelphia-torte",
+    "name": "Philadelphia Torte",
+    "category": "Dessert",
+    "emoji": "🍋",
+    "origin": "Eigenes Rezept",
+    "time": "30 Min + 4 Std. Kühlzeit",
+    "description": "Eine leichte, cremige Torte ohne Backofen – die Füllung aus Frischkäse, steif geschlagener Sahne und frischem Zitronensaft wird durch Götterspeise gebunden und auf einem butterigen Löffelbisquit-Boden angerichtet. Frisch, luftig und perfekt für warme Tage.",
+    "tags": [
+      "no-bake",
+      "käse",
+      "zitrone",
+      "frisch",
+      "torte",
+      "sommer"
+    ],
+    "ingredients": [
+      {
+        "name": "Löffelbisquit"
+      },
+      {
+        "name": "Butter (weich)"
+      },
+      {
+        "name": "Frischkäse"
+      },
+      {
+        "name": "Vanillezucker"
+      },
+      {
+        "name": "Götterspeise (oder 5 Blatt Gelatine)"
+      },
+      {
+        "name": "Zitronen (Saft davon)"
+      },
+      {
+        "name": "Zucker"
+      },
+      {
+        "name": "Sahne"
+      }
+    ]
+  },
+  {
+    "id": "kaesekuchen-horstmann",
+    "name": "Käsekuchen von Frau Horstmann",
+    "category": "Kuchen",
+    "emoji": "⭐",
+    "origin": "Frau Horstmann",
+    "time": "75 Minuten",
+    "description": "Frau Horstmanns Geheimrezept – ein Käsekuchen, der seinesgleichen sucht. Zwischen zwei Schichten knuspriger Streusel aus Zitronenmürbeteig versteckt sich eine samtig-luftige Quarkcreme, die durch sorgfältig untergehobenen Eischnee ihre unvergleichliche Konsistenz bekommt.",
+    "tags": [
+      "käsekuchen",
+      "streusel",
+      "quark",
+      "klassiker",
+      "festlich"
+    ],
+    "ingredients": [
+      {
+        "name": "Mehl"
+      },
+      {
+        "name": "Zucker"
+      },
+      {
+        "name": "Eigelb"
+      },
+      {
+        "name": "Zitronensaft"
+      },
+      {
+        "name": "Butter (kalt, in Stücken)"
+      },
+      {
+        "name": "Backpulver"
+      },
+      {
+        "name": "Vanillezucker"
+      },
+      {
+        "name": "Butter"
+      },
+      {
+        "name": "Zucker"
+      },
+      {
+        "name": "Vanillezucker"
+      },
+      {
+        "name": "Grieß"
+      },
+      {
+        "name": "Eigelb"
+      },
+      {
+        "name": "Quark"
+      },
+      {
+        "name": "Eiweiß"
+      }
+    ]
+  },
+  {
+    "id": "kassler-sauerkraut",
+    "name": "Kassler mit Sauerkraut",
+    "category": "Hauptgericht",
+    "emoji": "🥩",
+    "origin": "Eigenes Rezept",
+    "time": "75 Minuten",
+    "description": "Ein herzhafter Eintopf-Klassiker: Kassler wird zunächst scharf angebraten, bis es eine schöne Kruste bekommt, dann mit Sauerkraut, Ananas, Lorbeer und Wacholderbeeren eine ganze Stunde sanft geschmort. Das Ergebnis ist zart, würzig und wunderbar aromatisch.",
+    "tags": [
+      "kassler",
+      "sauerkraut",
+      "herzhaft",
+      "eintopf",
+      "winterlich"
+    ],
+    "ingredients": [
+      {
+        "name": "Kassler"
+      },
+      {
+        "name": "Sauerkraut"
+      },
+      {
+        "name": "Ananas (mit Saft)"
+      },
+      {
+        "name": "Zwiebeln"
+      },
+      {
+        "name": "Lorbeerblätter"
+      },
+      {
+        "name": "Wacholderbeeren"
+      },
+      {
+        "name": "Salz, Pfeffer, Zucker"
+      },
+      {
+        "name": "Öl zum Anbraten"
+      }
+    ]
+  },
+  {
+    "id": "champignonpfanne",
+    "name": "Champignonpfanne",
+    "category": "Hauptgericht",
+    "emoji": "🍄",
+    "origin": "Eigenes Rezept",
+    "time": "45 Minuten",
+    "description": "Eine herzhafte Pfanne voller Kontraste: krosse Kartoffeln und knuspriger Bacon treffen auf zart angebratene Champignons und Zwiebeln. Das besondere Highlight ist die frisch pürierte Basilikum-Joghurt-Sauce, die dem Gericht eine überraschend frische, cremige Note verleiht.",
+    "tags": [
+      "pilze",
+      "kartoffeln",
+      "bacon",
+      "pfanne",
+      "schnell"
+    ],
+    "ingredients": [
+      {
+        "name": "gekochte kleine Kartoffeln"
+      },
+      {
+        "name": "Zwiebeln"
+      },
+      {
+        "name": "große Champignons"
+      },
+      {
+        "name": "Bacon"
+      },
+      {
+        "name": "Öl"
+      },
+      {
+        "name": "Butter"
+      },
+      {
+        "name": "Schlagsahne"
+      },
+      {
+        "name": "Sahnejoghurt"
+      },
+      {
+        "name": "Basilikum"
+      },
+      {
+        "name": "Zitronensaft"
+      },
+      {
+        "name": "Schnittlauchröllchen"
+      },
+      {
+        "name": "Salz, Pfeffer, Zucker"
+      }
+    ]
+  },
+  {
+    "id": "kaesesuppe",
+    "name": "Käsesuppe",
+    "category": "Hauptgericht",
+    "emoji": "🍲",
+    "origin": "Von Nika",
+    "time": "60 Minuten",
+    "description": "Nikas herzhafte Käsesuppe ist ein vollständiges Hauptgericht aus dem Topf: Hackfleisch und Mettwurst geben Substanz, Lauch und Brühe die Basis – und am Ende verleihen vier Päckchen Schmelzkäse und Sahne der Suppe ihre unverwechselbar cremige, sämige Konsistenz.",
+    "tags": [
+      "suppe",
+      "käse",
+      "hackfleisch",
+      "lauch",
+      "herzhaft",
+      "winterlich"
+    ],
+    "ingredients": [
+      {
+        "name": "Hackfleisch"
+      },
+      {
+        "name": "Zwiebeln"
+      },
+      {
+        "name": "Sahnekäse"
+      },
+      {
+        "name": "Kräuter-Sahnekäse"
+      },
+      {
+        "name": "Sahne"
+      },
+      {
+        "name": "Zwiebelmettwurst"
+      },
+      {
+        "name": "TK-Lauch / Porree"
+      },
+      {
+        "name": "Brühe (für 4–5 Liter)"
+      }
+    ]
+  },
+  {
+    "id": "tacko-auflauf",
+    "name": "Tacko-Auflauf",
+    "category": "Hauptgericht",
+    "emoji": "🌮",
+    "origin": "Von Andi",
+    "time": "50 Minuten",
+    "description": "Andis mexikanisch inspirierter Auflauf vereint saftiges Putenbrustfilet mit buntem Paprika, Kidney-Bohnen und Mais – alles überbacken mit würzigem Käse und kurz vor Ende mit knusprigen Tacos bestreut. Schnell zusammengestellt und immer ein Treffer.",
+    "tags": [
+      "mexikanisch",
+      "auflauf",
+      "pute",
+      "käse",
+      "würzig",
+      "schnell"
+    ],
+    "ingredients": [
+      {
+        "name": "Putenbrustfilet"
+      },
+      {
+        "name": "Kidney-Bohnen"
+      },
+      {
+        "name": "Mais"
+      },
+      {
+        "name": "grüne Paprika"
+      },
+      {
+        "name": "rote Paprika"
+      },
+      {
+        "name": "Tacos"
+      },
+      {
+        "name": "geriebener Käse"
+      },
+      {
+        "name": "saure Sahne"
+      },
+      {
+        "name": "Milch"
+      },
+      {
+        "name": "Ei"
+      },
+      {
+        "name": "Öl, Salz, Pfeffer, Paprikagewürz, Chili"
+      }
+    ]
+  },
+  {
+    "id": "kartoffelsalat",
+    "name": "Kartoffelsalat",
+    "category": "Beilage",
+    "emoji": "🥔",
+    "origin": "Von Melanie",
+    "time": "60 Minuten + Ziehzeit",
+    "description": "Melanies Kartoffelsalat ist der Inbegriff eines klassischen deutschen Kartoffelsalats – cremig durch viel Mayonnaise, würzig durch Senf und Gewürzgurken, mit hartgekochten Eiern und einem Hauch Meerrettich. Das Geheimnis liegt im langen Durchziehen im Kühlschrank.",
+    "tags": [
+      "kartoffel",
+      "salat",
+      "mayo",
+      "klassiker",
+      "grill",
+      "party"
+    ],
+    "ingredients": [
+      {
+        "name": "Kartoffeln (festkochend)"
+      },
+      {
+        "name": "Eier"
+      },
+      {
+        "name": "Gewürzgurken (+ etwas Gurkensaft)"
+      },
+      {
+        "name": "Zwiebel"
+      },
+      {
+        "name": "Senf"
+      },
+      {
+        "name": "Essig"
+      },
+      {
+        "name": "Meerrettich (optional)"
+      },
+      {
+        "name": "Mayonnaise"
+      },
+      {
+        "name": "Salz"
+      }
+    ]
+  },
+  {
+    "id": "nudelsalat",
+    "name": "Nudelsalat",
+    "category": "Beilage",
+    "emoji": "🍝",
+    "origin": "Eigenes Rezept",
+    "time": "30 Minuten",
+    "description": "Ein bunter, unkomplizierter Nudelsalat mit allem was dazugehört – Erbsen, Möhren, Mais, Pilzen und hartgekochten Eiern. Cremig durch Mayonnaise, schnell zubereitet und der sichere Treffer auf jedem Grillfest oder Buffet.",
+    "tags": [
+      "nudeln",
+      "salat",
+      "mayo",
+      "party",
+      "schnell",
+      "grill"
+    ],
+    "ingredients": [
+      {
+        "name": "Nudeln (z.B. Spirelli)"
+      },
+      {
+        "name": "Erbsen & Möhren"
+      },
+      {
+        "name": "geschnittene Pilze"
+      },
+      {
+        "name": "Mais"
+      },
+      {
+        "name": "Eier"
+      },
+      {
+        "name": "Gurken (wenig Saft)"
+      },
+      {
+        "name": "Mayonnaise"
+      },
+      {
+        "name": "Salz, Pfeffer"
+      }
+    ]
+  },
+  {
+    "id": "pizza",
+    "name": "Pizza",
+    "category": "Hauptgericht",
+    "emoji": "🍕",
+    "origin": "Von Franks Mutter",
+    "time": "60 Minuten",
+    "description": "Franks Mutter's bewährter Pizzateig mit selbst eingekochter Tomatensoße – der Teig geht zweimal und wird dadurch schön luftig. Die Soße aus Dosentomaten wird kurz eingekocht und kräftig abgeschmeckt. Was obendrauf kommt, bleibt jedem selbst überlassen.",
+    "tags": [
+      "pizza",
+      "hefe",
+      "teig",
+      "family",
+      "belegen"
+    ],
+    "ingredients": [
+      {
+        "name": "Mehl"
+      },
+      {
+        "name": "Hefe"
+      },
+      {
+        "name": "Salz"
+      },
+      {
+        "name": "Zucker"
+      },
+      {
+        "name": "Speiseöl"
+      },
+      {
+        "name": "Milch (lauwarm)"
+      },
+      {
+        "name": "Tomaten"
+      },
+      {
+        "name": "Salz, Pfeffer, Majoran, Paprika, Zucker"
+      },
+      {
+        "name": "Käse und weitere Toppings"
+      }
+    ]
+  },
+  {
+    "id": "pizzateig-tobis-mutter",
+    "name": "Pizzateig (Tobis Mutter)",
+    "category": "Hauptgericht",
+    "emoji": "🫓",
+    "origin": "Tobis Mutter",
+    "time": "45 Minuten",
+    "description": "Ein zuverlässiger, unkomplizierter Hefeteig mit Margarine – schnell angerührt, kurze Gehzeit, gutes Ergebnis. Tobis Mutter's Geheimrezept für einen lockeren, dünn ausrollbaren Pizzaboden.",
+    "tags": [
+      "pizza",
+      "hefe",
+      "teig",
+      "basic",
+      "schnell"
+    ],
+    "ingredients": [
+      {
+        "name": "Mehl"
+      },
+      {
+        "name": "Hefe"
+      },
+      {
+        "name": "Zucker"
+      },
+      {
+        "name": "Milch"
+      },
+      {
+        "name": "Margarine"
+      },
+      {
+        "name": "Salz"
+      }
+    ]
+  },
+  {
+    "id": "kraeuterquark",
+    "name": "Kräuterquark",
+    "category": "Beilage",
+    "emoji": "🌿",
+    "origin": "Tobis Mutter",
+    "time": "5 Minuten",
+    "description": "Ein frischer, cremiger Kräuterquark der in fünf Minuten fertig ist – mit Schmand, Tiefkühlkräutern, Worcester-Sauce und einem Spritzer Zitrone. Passt zu Pellkartoffeln, Brot oder als Dip zu rohem Gemüse.",
+    "tags": [
+      "quark",
+      "kräuter",
+      "schnell",
+      "dip",
+      "beilage",
+      "vegetarisch"
+    ],
+    "ingredients": [
+      {
+        "name": "Quark"
+      },
+      {
+        "name": "Schmand"
+      },
+      {
+        "name": "Tiefkühl-Kräutermischung (\"8 Kräuter\")"
+      },
+      {
+        "name": "Worcester-Sauce"
+      },
+      {
+        "name": "Zitronensaft"
+      },
+      {
+        "name": "Salz, Pfeffer, Prise Zucker"
+      }
+    ]
+  },
+  {
+    "id": "rote-gruetze",
+    "name": "Rote Grütze mit Vanillesauce",
+    "category": "Dessert",
+    "emoji": "🍓",
+    "origin": "Tobis Mutter",
+    "time": "30 Minuten",
+    "description": "Eine hausgemachte Rote Grütze aus frischen Erdbeeren, Himbeeren, Johannisbeeren und Kirschen – intensiv fruchtig und mit Speisestärke leicht gebunden. Dazu eine samtige Vanillesauce aus Eigelb, Sahne und echter Vanilleschote. Ein Dessert-Klassiker der Nordsee-Küche.",
+    "tags": [
+      "beeren",
+      "dessert",
+      "sommer",
+      "vanille",
+      "klassiker"
+    ],
+    "ingredients": [
+      {
+        "name": "Erdbeeren"
+      },
+      {
+        "name": "Himbeeren"
+      },
+      {
+        "name": "Johannisbeeren"
+      },
+      {
+        "name": "Kirschen (mit Saft)"
+      },
+      {
+        "name": "Zucker"
+      },
+      {
+        "name": "Mondamin / Speisestärke"
+      },
+      {
+        "name": "Mondamin / Speisestärke"
+      },
+      {
+        "name": "Eigelb"
+      },
+      {
+        "name": "Milch"
+      },
+      {
+        "name": "Sahne"
+      },
+      {
+        "name": "Zucker"
+      },
+      {
+        "name": "Salz"
+      },
+      {
+        "name": "Vanilleschote"
+      }
+    ]
+  },
+  {
+    "id": "spareribs",
+    "name": "Spareribs",
+    "category": "Hauptgericht",
+    "emoji": "🍖",
+    "origin": "Eigenes Rezept",
+    "time": "15 Min + Marinierzeit",
+    "description": "Saftige Spareribs mit einer selbst gemachten Honig-Ketchup-Marinade mit Ananas, Knoblauch und Kräutern. Das Geheimnis ist die lange Marinierzeit – mindestens über Nacht – die das Fleisch zart und unglaublich aromatisch macht.",
+    "tags": [
+      "spareribs",
+      "grill",
+      "marinade",
+      "honig",
+      "sommer",
+      "BBQ"
+    ],
+    "ingredients": [
+      {
+        "name": "Spareribs"
+      },
+      {
+        "name": "Tomatenketchup"
+      },
+      {
+        "name": "Honig"
+      },
+      {
+        "name": "Öl"
+      },
+      {
+        "name": "Ananassaft"
+      },
+      {
+        "name": "Knoblauch"
+      },
+      {
+        "name": "getrocknete Kräuter"
+      }
+    ]
+  },
+  {
+    "id": "stockbrot",
+    "name": "Stockbrot",
+    "category": "Sonstiges",
+    "emoji": "🔥",
+    "origin": "Eigenes Rezept",
+    "time": "20 Minuten",
+    "description": "Ein einfacher Backpulver-Teig für den nächsten Lagefeuerabend – kein Warten auf Hefe, kein Aufgehen notwendig. Den Teig in Streifen schneiden, um den Stock wickeln und über der Glut backen. Für Kinder und Erwachsene gleichermaßen ein Erlebnis.",
+    "tags": [
+      "lagerfeuer",
+      "kinder",
+      "outdoor",
+      "brot",
+      "schnell"
+    ],
+    "ingredients": [
+      {
+        "name": "Mehl"
+      },
+      {
+        "name": "Backpulver"
+      },
+      {
+        "name": "Salz"
+      },
+      {
+        "name": "Margarine"
+      },
+      {
+        "name": "Milch"
+      }
+    ]
+  },
+  {
+    "id": "blaetterteigtaschen",
+    "name": "Blätterteigtaschen",
+    "category": "Sonstiges",
+    "emoji": "🥐",
+    "origin": "Eigenes Rezept",
+    "time": "35 Minuten",
+    "description": "Herzhafte Blätterteigtaschen mit einer cremigen Füllung aus knusprig angebratenem Speck, Zwiebeln und Lauch – gebunden mit Sahne und Ei und mit Käse überbacken. Schnell gemacht und immer eine gute Idee.",
+    "tags": [
+      "blätterteig",
+      "speck",
+      "lauch",
+      "schnell",
+      "fingerfood",
+      "herzhaft"
+    ],
+    "ingredients": [
+      {
+        "name": "Blätterteig (TK oder frisch)"
+      },
+      {
+        "name": "Speck (gewürfelt oder in Streifen)"
+      },
+      {
+        "name": "Zwiebeln"
+      },
+      {
+        "name": "Lauchstangen"
+      },
+      {
+        "name": "Sahne"
+      },
+      {
+        "name": "Eier"
+      },
+      {
+        "name": "geriebener Käse"
+      }
+    ]
+  },
+  {
+    "id": "gugelhupf",
+    "name": "Gugelhupf",
+    "category": "Kuchen",
+    "emoji": "🎂",
+    "origin": "Eigenes Rezept",
+    "time": "75 Minuten",
+    "description": "Ein zeitloser Gugelhupf nach bewährtem Rezept – locker, saftig und mit dem unverwechselbaren Duft von Buttervanille. Wahlweise pur oder als Marmorkuchen mit einer Kakao-Milch-Swirl-Schicht. Ein Kuchen, der bei Kaffee und Kuchen nie fehlen darf.",
+    "tags": [
+      "gugelhupf",
+      "marmorkuchen",
+      "klassiker",
+      "kaffee",
+      "saftig"
+    ],
+    "ingredients": [
+      {
+        "name": "Mehl"
+      },
+      {
+        "name": "Backpulver"
+      },
+      {
+        "name": "Zucker"
+      },
+      {
+        "name": "Vanillezucker"
+      },
+      {
+        "name": "Butter oder Margarine"
+      },
+      {
+        "name": "Eier"
+      },
+      {
+        "name": "Kakao (für Marmorkuchen)"
+      },
+      {
+        "name": "Milch (für Marmorkuchen)"
+      },
+      {
+        "name": "Backaroma Buttervanille"
+      }
+    ]
+  },
+  {
+    "id": "spritzgebaeck",
+    "name": "Spritzgebäck",
+    "category": "Kuchen",
+    "emoji": "⭐",
+    "origin": "Franks Mutter",
+    "time": "30 Min + 24 Std. Ruhezeit",
+    "description": "Das Spritzgebäck-Rezept von Franks Mutter ergibt eine beeindruckende Menge von etwa sieben Blechen – perfekt für die Weihnachtsbäckerei. Der Teig muss 24 Stunden ruhen und wird dann durch den Fleischwolf oder eine Gebäckpresse in klassische Formen gebracht.",
+    "tags": [
+      "weihnachten",
+      "plätzchen",
+      "gebäck",
+      "klassiker",
+      "viel"
+    ],
+    "ingredients": [
+      {
+        "name": "Mehl"
+      },
+      {
+        "name": "Zucker"
+      },
+      {
+        "name": "Vanillinzucker"
+      },
+      {
+        "name": "Backpulver"
+      },
+      {
+        "name": "Eier"
+      },
+      {
+        "name": "Butter (zimmerwarm)"
+      },
+      {
+        "name": "Margarine (zimmerwarm)"
+      }
+    ]
+  }
+];
+
+let activeFilter = 'alle';
+let searchQuery = '';
+
+document.getElementById('headerCount').textContent = ALL_RECIPES.length + ' Rezepte';
+
+function onSearch() {
+  searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
+  document.getElementById('clearBtn').classList.toggle('visible', searchQuery.length > 0);
+  render();
+}
+
+function setFilter(cat, btn) {
+  activeFilter = cat;
+  document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function clearSearch() {
+  searchQuery = '';
+  document.getElementById('searchInput').value = '';
+  document.getElementById('clearBtn').classList.remove('visible');
+  render();
+}
+
+function score(r, q) {
+  if (!q) return { match: true, s: 0 };
+  const fields = [
+    [r.name.toLowerCase(), 10],
+    [(r.tags||[]).join(' ').toLowerCase(), 8],
+    [(r.ingredients||[]).map(i=>i.name).join(' ').toLowerCase(), 5],
+    [(r.description||'').toLowerCase(), 3],
+    [(r.origin||'').toLowerCase(), 4],
+    [r.category.toLowerCase(), 6],
+  ];
+  let s = 0, match = false;
+  for (const [val, w] of fields) { if (val.includes(q)) { s += w; match = true; } }
+  return { match, s };
+}
+
+function hl(text, q) {
+  if (!q || !text) return text;
+  const esc = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return text.replace(new RegExp(`(${esc})`, 'gi'), '<mark>$1</mark>');
+}
+
+function render() {
+  const grid = document.getElementById('recipeGrid');
+  let list = ALL_RECIPES;
+  if (activeFilter !== 'alle') list = list.filter(r => r.category === activeFilter);
+
+  let scored = list.map(r => ({ r, ...score(r, searchQuery) }));
+  if (searchQuery) { scored = scored.filter(s => s.match); scored.sort((a,b) => b.s - a.s); }
+
+  document.getElementById('resultsCount').textContent =
+    scored.length === ALL_RECIPES.length
+      ? ALL_RECIPES.length + ' Rezepte'
+      : scored.length + ' von ' + ALL_RECIPES.length + ' Rezepten';
+
+  if (!scored.length) {
+    grid.innerHTML = `<div class="empty-state"><span class="emoji">🔍</span><h3>Kein Rezept gefunden</h3><p>Versuche einen anderen Suchbegriff.</p></div>`;
+    return;
+  }
+
+  grid.innerHTML = scored.map(({r}) => {
+    const photo = localStorage.getItem('photo_' + r.id);
+    const imgHtml = photo ? `<img src="${photo}" alt="${r.name}" loading="lazy">` : '';
+    const tagsHtml = (r.tags||[]).slice(0,4).map(t => {
+      const hit = searchQuery && t.toLowerCase().includes(searchQuery);
+      return `<span class="tag ${hit?'highlight':''}">${t}</span>`;
+    }).join('');
+
+    return `<a class="recipe-card" href="${r.id}.html">
+      <div class="card-thumb">${imgHtml}<span class="card-thumb-emoji">${r.emoji||'🍽️'}</span></div>
+      <div class="card-body">
+        <div class="card-cat">${r.category}</div>
+        <h2 class="card-title">${hl(r.name, searchQuery)}</h2>
+        <p class="card-desc">${hl(r.description||'', searchQuery)}</p>
+        ${tagsHtml ? `<div class="card-tags">${tagsHtml}</div>` : ''}
+        <div class="card-footer">
+          <span class="card-meta-item">⏱ ${r.time||'–'}</span>
+          ${r.origin ? `<span class="card-origin">${r.origin}</span>` : ''}
+        </div>
+      </div>
+    </a>`;
+  }).join('');
+}
+
+render();
+</script>
+</body>
+</html>
